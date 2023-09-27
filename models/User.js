@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
     profilePicture: { type: String, required: true },
     role: {
       type: String,
-      enum: ["customer", "owner"],
+      enum: ["customer", "owner", "admin"],
       required: true,
       default: "customer",
     },
