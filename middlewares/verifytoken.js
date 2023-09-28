@@ -26,6 +26,16 @@ const verifyTokenAndAutherization = (req, res, next) => {
   });
 };
 
+const verifyTokenOwnerOrAdmin = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user.role === "admin" || req.user.role === "owner") {
+      next();
+    } else {
+      return res.status(401).json("Un Authorized");
+    }
+  });
+};
+
 const verifyTokenAndAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
     if (req.user.role === "admin") {
@@ -39,5 +49,6 @@ const verifyTokenAndAdmin = (req, res, next) => {
 module.exports = {
   verifyToken,
   verifyTokenAndAutherization,
+  verifyTokenOwnerOrAdmin,
   verifyTokenAndAdmin,
 };

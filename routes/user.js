@@ -3,9 +3,11 @@ const CryptoJS = require("crypto-js");
 const {
   verifyTokenAndAutherization,
   verifyTokenAndAdmin,
+  verifyTokenOwnerOrAdmin,
 } = require("../middlewares/verifytoken");
 
 const User = require("../models/User");
+const Restaurant = require("../models/Restaurant");
 
 const router = require("express").Router();
 
@@ -51,6 +53,21 @@ router.get("/:id", verifyTokenAndAdmin, async (req, res) => {
     const { password, ...others } = user._doc;
 
     res.status(200).json(others);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// Get All User Restaurants => Owner or Admin
+router.get("/:id/restaurants", verifyTokenOwnerOrAdmin, async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const restaurants = await Restaurant.find({
+      owner: userId,
+    });
+
+    res.status(200).json(restaurants);
   } catch (err) {
     res.status(500).json(err);
   }
