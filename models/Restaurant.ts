@@ -1,6 +1,17 @@
-const mongoose = require("mongoose");
+import mongoose, { Document, Schema } from "mongoose";
 
-const restaurantSchema = new mongoose.Schema(
+interface IRestaurant extends Document {
+  name: string;
+  description: String;
+  location: mongoose.Types.ObjectId;
+  cusine: string;
+  owner: mongoose.Types.ObjectId;
+  menu: mongoose.Types.ObjectId[];
+  reviews: mongoose.Types.ObjectId[];
+  images: string[];
+}
+
+const restaurantSchema = new Schema<IRestaurant>(
   {
     name: { type: String, required: true },
     description: { type: String, required: true },
@@ -14,4 +25,7 @@ const restaurantSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Restaurants", restaurantSchema);
+export const Restaurant = mongoose.model<IRestaurant>(
+  "Restaurant",
+  restaurantSchema
+);
