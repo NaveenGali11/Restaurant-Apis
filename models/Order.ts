@@ -1,6 +1,19 @@
-const mongoose = require("mongoose");
+import mongoose, { Document, Schema } from "mongoose";
 
-const orderSchema = new mongoose.Schema(
+interface IOrder extends Document {
+  user: mongoose.Types.ObjectId;
+  restaurant: mongoose.Types.ObjectId;
+  items: {
+    menuItem: mongoose.Types.ObjectId;
+    quantity: number;
+    price: number;
+  }[];
+  totalPrice: number;
+  status: "pending" | "confirmed" | "delivered";
+  deliveryAddress: mongoose.Types.ObjectId;
+}
+
+const orderSchema = new Schema<IOrder>(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
@@ -26,4 +39,4 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Order", orderSchema);
+export const Order = mongoose.model<IOrder>("Order", orderSchema);
