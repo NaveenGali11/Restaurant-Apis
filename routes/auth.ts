@@ -1,20 +1,23 @@
 import { Router, Request, Response } from "express";
 
-import CryptoJS from "crypto-js";
-import jwt from "jsonwebtoken";
+import { AES, enc } from "crypto-js";
+import jwt, { Secret } from "jsonwebtoken";
 import { User } from "../models";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const router = Router();
 
-const API_SECRET = process.env.API_SECRET || "";
-const JWT_SECRET = process.env.JWT_SECRET || "";
+const API_SECRET = process.env.API_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // SIGN UP or REGISTER
 router.post("/register", async (req: Request, res: Response) => {
   const newUser = new User({
     username: req.body.username,
     email: req.body.email,
-    password: CryptoJS.AES.encrypt(req.body.password, API_SECRET).toString(),
+    password: AES.encrypt(req.body.password, API_SECRET ?? "").toString(),
     profilePicture: req.body.profilePicture,
     role: req.body.role,
   });
@@ -34,11 +37,13 @@ router.post("/login", async (req: Request, res: Response) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
-      res.send(401).json("User Not Found");
+      return res.status(401).json("User Not Found");
+    } else if (!API_SECRET || !JWT_SECRET) {
+      return res.status(500).json("Internal Server Error");
     } else {
-      const hashPassword = CryptoJS.AES.decrypt(user.password, API_SECRET);
+      const hashPassword = AES.decrypt(user.password, API_SECRET);
 
-      const password1 = hashPassword.toString(CryptoJS.enc.Utf8);
+      const password1 = hashPassword.toString(enc.Utf8);
 
       if (password1 !== req.body.password) {
         return res.status(401).json("Incorrect Credentials");
@@ -51,10 +56,10 @@ router.post("/login", async (req: Request, res: Response) => {
       );
 
       const { password, ...others } = user.toObject();
-      res.status(200).json({ ...others, accessToken });
+      return res.status(200).json({ ...others, accessToken });
     }
   } catch (err) {
-    res.status(500).json(err);
+    return res.status(500).json(err);
   }
 });
 
