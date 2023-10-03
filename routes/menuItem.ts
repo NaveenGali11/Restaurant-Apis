@@ -1,6 +1,10 @@
 import express, { Request, Response, Router } from "express";
 
-import { verifyTokenOwnerOrAdmin } from "../middlewares";
+import {
+  checkFileType,
+  uploadMiddleware,
+  verifyTokenOwnerOrAdmin,
+} from "../middlewares";
 import { MenuItem, Restaurant } from "../models";
 
 const router = Router();
@@ -8,16 +12,13 @@ const router = Router();
 router.get("/:id", async (req: Request, res: Response) => {
   const restaurantId = req.params.id;
 
-  console.log(restaurantId);
-
   try {
-    const menuItems = await Restaurant.find({
+    const menuItems = await MenuItem.find({
       restaurant: restaurantId,
     });
 
     res.status(200).json(menuItems);
   } catch (e) {
-    console.log(e);
     res.status(500).json(e);
   }
 });
@@ -25,6 +26,8 @@ router.get("/:id", async (req: Request, res: Response) => {
 router.post(
   "/:id/add",
   verifyTokenOwnerOrAdmin,
+  checkFileType("images"),
+  uploadMiddleware("images", "uploads/menu/"),
   async (req: Request, res: Response) => {
     const restaurantId = req.params.id;
 
@@ -34,7 +37,7 @@ router.post(
       price: req.body.price,
       category: req.body.category,
       restaurant: restaurantId,
-      images: [],
+      images: req.body.images,
     });
 
     try {
@@ -58,6 +61,8 @@ router.post(
 router.put(
   "/:menuId",
   verifyTokenOwnerOrAdmin,
+  checkFileType("images"),
+  uploadMiddleware("images", "uploads/menu/"),
   async (req: Request, res: Response) => {
     const menuId = req.params.menuId;
 

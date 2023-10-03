@@ -27,7 +27,6 @@ router.post("/register", async (req: Request, res: Response) => {
     res.status(201).json(savedUser);
   } catch (err) {
     res.status(500).json(err);
-    console.log("err: ", err);
   }
 });
 
