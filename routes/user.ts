@@ -2,7 +2,9 @@ import { Request, Response, Router } from "express";
 import CryptoJS from "crypto-js";
 
 import {
+  checkFileType,
   jwtUser,
+  uploadMiddleware,
   verifyTokenAndAdmin,
   verifyTokenAndAuthorization,
   verifyTokenOwnerOrAdmin,
@@ -15,6 +17,8 @@ const router = Router();
 router.put(
   "/:id",
   verifyTokenAndAuthorization,
+  checkFileType("profilePicture"),
+  uploadMiddleware("profilePicture", "uploads/users/"),
   async (req: Request, res: Response) => {
     if (req.body.password) {
       req.body.password = CryptoJS.AES.encrypt(

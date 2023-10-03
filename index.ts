@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
+import fileUpload from "express-fileupload";
 
 import {
   AuthRouter,
@@ -17,6 +18,12 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(
+  fileUpload({
+    createParentPath: true,
+  })
+);
+app.use("/uploads", express.static("uploads"));
 
 app.use("/api/auth", AuthRouter);
 app.use("/api/users", UserRouter);

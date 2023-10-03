@@ -1,6 +1,10 @@
 import { Request as ExpressRequest, Response, NextFunction } from "express";
 import jwt, { Secret } from "jsonwebtoken";
 
+import dotenv from "dotenv";
+
+dotenv.config();
+
 const JWT_SECRET = process.env.JWT_SECRET as Secret;
 
 export interface jwtUser {
@@ -26,6 +30,7 @@ export const verifyToken = (
         return res.status(403).json("Token is not valid");
       }
       req.user = user as jwtUser;
+
       next();
     });
   } else {

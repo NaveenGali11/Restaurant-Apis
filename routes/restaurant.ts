@@ -10,7 +10,13 @@
  */
 
 import { Request as ExpressRequest, Response, Router } from "express";
-import { jwtUser, verifyToken, verifyTokenOwnerOrAdmin } from "../middlewares";
+import {
+  checkFileType,
+  jwtUser,
+  uploadMiddleware,
+  verifyToken,
+  verifyTokenOwnerOrAdmin,
+} from "../middlewares";
 import { Restaurant, Location, Review } from "../models";
 
 const router = Router();
@@ -39,7 +45,6 @@ router.get("/", async (req: Request, res: Response) => {
 
     res.status(200).json(restaurants);
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });
@@ -84,6 +89,8 @@ router.get("/:id", async (req: Request, res: Response) => {
 router.post(
   "/",
   verifyTokenOwnerOrAdmin,
+  checkFileType("images"),
+  uploadMiddleware("images"),
   async (req: Request, res: Response) => {
     const {
       name,
