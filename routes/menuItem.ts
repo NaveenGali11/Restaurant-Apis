@@ -1,4 +1,4 @@
-import express, { Request, Response, Router } from "express";
+import { Request, Response, Router } from "express";
 
 import {
   checkFileType,
@@ -6,6 +6,7 @@ import {
   verifyTokenOwnerOrAdmin,
 } from "../middlewares";
 import { MenuItem, Restaurant } from "../models";
+import { sendError, sendResponse } from "../utils";
 
 const router = Router();
 
@@ -17,9 +18,13 @@ router.get("/:id", async (req: Request, res: Response) => {
       restaurant: restaurantId,
     });
 
-    res.status(200).json(menuItems);
-  } catch (e) {
-    res.status(500).json(e);
+    const menuItemsCount = await MenuItem.countDocuments({
+      restaurant: restaurantId,
+    });
+
+    sendResponse(res, 200, menuItems, "Success", menuItemsCount);
+  } catch (e: any) {
+    sendError(res, 500, e.message);
   }
 });
 
@@ -51,9 +56,9 @@ router.post(
         path: "menu",
       });
 
-      res.status(201).json(updatedRestaurantMenu);
-    } catch (e) {
-      res.status(500).json(e);
+      sendResponse(res, 201, updatedRestaurantMenu, "Menu Added Successfully");
+    } catch (e: any) {
+      sendError(res, 500, e.message);
     }
   }
 );
@@ -75,9 +80,9 @@ router.put(
         { new: true }
       );
 
-      res.status(200).json(updatedMenuItem);
-    } catch (e) {
-      res.status(500).json(e);
+      sendResponse(res, 200, updatedMenuItem, "Menu Updated Successfully");
+    } catch (e: any) {
+      sendError(res, 500, e.message);
     }
   }
 );
@@ -91,7 +96,7 @@ router.delete(
     try {
       const deletedMenuItem = await MenuItem.findByIdAndDelete(menuId);
       if (!deletedMenuItem) {
-        res.status(404).json("Menu Item Not Found");
+        sendError(res, 404, "Menu Item Not Found");
       } else {
         const updatedRestaurant = await Restaurant.findByIdAndUpdate(
           deletedMenuItem.restaurant,
@@ -103,10 +108,10 @@ router.delete(
           }
         );
 
-        res.status(200).json(updatedRestaurant);
+        sendResponse(res, 200, updatedRestaurant, "Menu Deleted Successfully");
       }
-    } catch (e) {
-      res.status(500).json(e);
+    } catch (e: any) {
+      sendError(res, 500, e.message);
     }
   }
 );

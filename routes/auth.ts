@@ -4,6 +4,7 @@ import { AES, enc } from "crypto-js";
 import jwt, { Secret } from "jsonwebtoken";
 import { User } from "../models";
 import dotenv from "dotenv";
+import { sendError, sendResponse } from "../utils";
 
 dotenv.config();
 
@@ -24,9 +25,9 @@ router.post("/register", async (req: Request, res: Response) => {
 
   try {
     const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
-  } catch (err) {
-    res.status(500).json(err);
+    sendResponse(res, 201, savedUser, "User Created Successfully");
+  } catch (err: any) {
+    sendError(res, 500, err.message);
   }
 });
 
@@ -36,16 +37,16 @@ router.post("/login", async (req: Request, res: Response) => {
     const user = await User.findOne({ email: req.body.email });
 
     if (!user) {
-      return res.status(401).json("User Not Found");
+      return sendError(res, 401, "User Not Found");
     } else if (!API_SECRET || !JWT_SECRET) {
-      return res.status(500).json("Internal Server Error");
+      return sendError(res, 500, "Internal Server Error");
     } else {
       const hashPassword = AES.decrypt(user.password, API_SECRET);
 
       const password1 = hashPassword.toString(enc.Utf8);
 
       if (password1 !== req.body.password) {
-        return res.status(401).json("Incorrect Credentials");
+        return sendError(res, 401, "Incorrect Credentials");
       }
 
       const accessToken = jwt.sign(
@@ -55,10 +56,15 @@ router.post("/login", async (req: Request, res: Response) => {
       );
 
       const { password, ...others } = user.toObject();
-      return res.status(200).json({ ...others, accessToken });
+      return sendResponse(
+        res,
+        200,
+        { ...others, accessToken },
+        "Logged In Successfully"
+      );
     }
-  } catch (err) {
-    return res.status(500).json(err);
+  } catch (err: any) {
+    return sendError(res, 500, err.message);
   }
 });
 
