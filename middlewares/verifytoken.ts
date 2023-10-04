@@ -2,6 +2,7 @@ import { Request as ExpressRequest, Response, NextFunction } from "express";
 import jwt, { Secret } from "jsonwebtoken";
 
 import dotenv from "dotenv";
+import { sendError } from "../utils";
 
 dotenv.config();
 
@@ -27,14 +28,14 @@ export const verifyToken = (
     const token = authHeader.split(" ")[1];
     jwt.verify(token, JWT_SECRET, (err, user) => {
       if (err) {
-        return res.status(403).json("Token is not valid");
+        return sendError(res, 403, "Token is not valid");
       }
       req.user = user as jwtUser;
 
       next();
     });
   } else {
-    return res.status(401).json("UnAuthorized");
+    return sendError(res, 401, "Un Authorized");
   }
 };
 
@@ -50,7 +51,7 @@ export const verifyTokenAndAuthorization = (
     ) {
       next();
     } else {
-      return res.status(401).json("Un Authorized");
+      return sendError(res, 401, "Un Authorized");
     }
   });
 };
@@ -64,7 +65,7 @@ export const verifyTokenOwnerOrAdmin = (
     if (req.user && (req.user.role === "admin" || req.user.role === "owner")) {
       next();
     } else {
-      return res.status(401).json("Un Authorized");
+      return sendError(res, 401, "Un Authorized");
     }
   });
 };
@@ -78,7 +79,7 @@ export const verifyTokenAndAdmin = (
     if (req.user && req.user.role === "admin") {
       next();
     } else {
-      return res.status(401).json("Un Authorized");
+      return sendError(res, 401, "Un Authorized");
     }
   });
 };

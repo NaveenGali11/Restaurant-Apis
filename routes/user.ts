@@ -1,15 +1,15 @@
-import { Request, Response, Router } from "express";
 import CryptoJS from "crypto-js";
+import { Request, Response, Router } from "express";
 
 import {
   checkFileType,
-  jwtUser,
   uploadMiddleware,
   verifyTokenAndAdmin,
   verifyTokenAndAuthorization,
   verifyTokenOwnerOrAdmin,
 } from "../middlewares";
 import { Restaurant, User } from "../models";
+import { sendError, sendResponse } from "../utils";
 
 const router = Router();
 
@@ -36,9 +36,9 @@ router.put(
         { new: true }
       );
 
-      res.status(200).json(updatedUser);
-    } catch (error) {
-      res.status(500).json(error);
+      sendResponse(res, 200, updatedUser, "User Updated Successfully");
+    } catch (error: any) {
+      sendError(res, 500, error.message);
     }
   }
 );
@@ -48,9 +48,11 @@ router.get("/", verifyTokenAndAdmin, async (req: Request, res: Response) => {
   try {
     const users = await User.find({});
 
-    res.status(200).json(users);
-  } catch (err) {
-    res.status(500).json(err);
+    const count = await User.countDocuments();
+
+    sendResponse(res, 200, users, "Success", count);
+  } catch (err: any) {
+    sendError(res, 500, err.message);
   }
 });
 
@@ -60,14 +62,14 @@ router.get("/:id", verifyTokenAndAdmin, async (req: Request, res: Response) => {
     const user = await User.findById(req.params.id);
 
     if (!user) {
-      res.status(404).json("User Not Found");
+      sendError(res, 404, "User Not Found");
     } else {
       const { password, ...others } = user.toObject();
 
-      res.status(200).json(others);
+      sendResponse(res, 200, others, "Success");
     }
-  } catch (err) {
-    res.status(500).json(err);
+  } catch (err: any) {
+    sendError(res, 500, err.message);
   }
 });
 
@@ -83,9 +85,13 @@ router.get(
         owner: userId,
       });
 
-      res.status(200).json(restaurants);
-    } catch (err) {
-      res.status(500).json(err);
+      const restaurantsCount = await Restaurant.countDocuments({
+        owner: userId,
+      });
+
+      sendResponse(res, 200, restaurants, "Success", restaurantsCount);
+    } catch (err: any) {
+      sendError(res, 500, err.message);
     }
   }
 );

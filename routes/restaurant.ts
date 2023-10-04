@@ -17,7 +17,8 @@ import {
   verifyToken,
   verifyTokenOwnerOrAdmin,
 } from "../middlewares";
-import { Restaurant, Location, Review } from "../models";
+import { Location, Restaurant, Review } from "../models";
+import { sendError, sendResponse } from "../utils";
 
 const router = Router();
 
@@ -43,9 +44,11 @@ router.get("/", async (req: Request, res: Response) => {
       },
     ]);
 
-    res.status(200).json(restaurants);
-  } catch (error) {
-    res.status(500).json(error);
+    const restaurantsCount = await Restaurant.countDocuments();
+
+    sendResponse(res, 200, restaurants, "Success", restaurantsCount);
+  } catch (error: any) {
+    sendError(res, 500, error.message);
   }
 });
 
@@ -77,11 +80,11 @@ router.get("/:id", async (req: Request, res: Response) => {
       },
     ]);
     if (!restaurant) {
-      res.status(404).json("Restaurant Not Found!");
+      sendError(res, 404, "Restaurant Not found");
     }
-    res.status(200).json(restaurant);
-  } catch (err) {
-    res.status(500).json(err);
+    sendResponse(res, 200, restaurant, "Success");
+  } catch (err: any) {
+    sendError(res, 500, err.message);
   }
 });
 
@@ -135,12 +138,17 @@ router.post(
           },
           { path: "location", select: "-__v" },
         ]);
-        res.status(201).json(savedRestaurant);
-      } catch (err) {
-        res.status(500).json(err);
+        sendResponse(
+          res,
+          201,
+          savedRestaurant,
+          "Restaurant Creation Successful"
+        );
+      } catch (err: any) {
+        sendError(res, 500, err.message);
       }
     } else {
-      res.status(404).json("NOT FOUND");
+      sendError(res, 404, "User Not Found");
     }
   }
 );
@@ -172,9 +180,14 @@ router.put(
         },
       ]);
 
-      res.status(200).json(updatedRestaurant);
-    } catch (err) {
-      res.status(500).json(err);
+      sendResponse(
+        res,
+        200,
+        updatedRestaurant,
+        "Restaurant Updated Successfully"
+      );
+    } catch (err: any) {
+      sendError(res, 400, err.message);
     }
   }
 );
@@ -188,9 +201,13 @@ router.get("/:id/review", async (req: Request, res: Response) => {
       restaurant: restaurantId,
     });
 
-    res.status(200).json(reviews);
-  } catch (err) {
-    res.status(500).json(err);
+    const reviewsCount = await Review.countDocuments({
+      restaurant: restaurantId,
+    });
+
+    sendResponse(res, 200, reviews, "Reviews Fetched", reviewsCount);
+  } catch (err: any) {
+    sendError(res, 500, err.message);
   }
 });
 
@@ -218,12 +235,12 @@ router.post("/:id/review", verifyToken, async (req: Request, res: Response) => {
         path: "reviews",
       });
 
-      res.status(200).json(updatedRestaurant);
-    } catch (err) {
-      res.status(500).json(err);
+      sendResponse(res, 200, updatedRestaurant, "Restaurant Updated");
+    } catch (err: any) {
+      sendError(res, 500, err.message);
     }
   } else {
-    res.status(404).json("NOT FOUND");
+    sendError(res, 404, "User Not Found");
   }
 });
 
