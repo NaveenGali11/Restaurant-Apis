@@ -100,7 +100,7 @@ router.post(
       description,
       cusine,
       menu,
-      ratings,
+      reviews,
       images,
       address,
       latitude,
@@ -123,32 +123,30 @@ router.post(
           description,
           cusine,
           menu,
-          ratings,
+          reviews,
           images,
           owner,
           location: savedLocation._id,
         });
 
-        const savedRestaurant = await (
-          await restaurant.save()
-        ).populate([
+        const savedRestaurant = await restaurant.save();
+        const populatedRestaurant = await Restaurant.populate(savedRestaurant, [
           {
             path: "owner",
             select: "-password -__v",
           },
           { path: "location", select: "-__v" },
         ]);
+
         sendResponse(
           res,
           201,
-          savedRestaurant,
-          "Restaurant Creation Successful"
+          populatedRestaurant,
+          "Restaurant Created Successfully"
         );
       } catch (err: any) {
         sendError(res, 500, err.message);
       }
-    } else {
-      sendError(res, 404, "User Not Found");
     }
   }
 );
@@ -157,6 +155,8 @@ router.post(
 router.put(
   "/:id",
   verifyTokenOwnerOrAdmin,
+  checkFileType("images"),
+  uploadMiddleware("images"),
   async (req: Request, res: Response) => {
     const restaurantId = req.params.id;
 
