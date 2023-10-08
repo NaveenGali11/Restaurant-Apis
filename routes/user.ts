@@ -1,6 +1,6 @@
 import CryptoJS from "crypto-js";
 import { Request, Response, Router } from "express";
-
+import { validationResult } from "express-validator";
 import {
   checkFileType,
   uploadMiddleware,
@@ -9,7 +9,8 @@ import {
   verifyTokenOwnerOrAdmin,
 } from "../middlewares";
 import { Restaurant, User } from "../models";
-import { sendError, sendResponse } from "../utils";
+import { formatErrorMessages, sendError, sendResponse } from "../utils";
+import { updateUserValidation } from "../validations";
 
 const router = Router();
 
@@ -18,8 +19,15 @@ router.put(
   "/:id",
   verifyTokenAndAuthorization,
   checkFileType("profilePicture"),
+  updateUserValidation,
   uploadMiddleware("profilePicture", "uploads/users/"),
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return sendError(res, 400, formatErrorMessages(errors.mapped()));
+    }
+
     if (req.body.password) {
       req.body.password = CryptoJS.AES.encrypt(
         req.body.password,

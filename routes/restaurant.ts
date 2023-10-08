@@ -17,8 +17,14 @@ import {
   verifyToken,
   verifyTokenOwnerOrAdmin,
 } from "../middlewares";
-import { Location, Restaurant, Review } from "../models";
-import { sendError, sendResponse } from "../utils";
+import { ILocation, Location, Restaurant, Review } from "../models";
+import { formatErrorMessages, sendError, sendResponse } from "../utils";
+import { check, validationResult, param } from "express-validator";
+import {
+  addRestaurantValidation,
+  addReviewValidation,
+  updatedRestaurantValidation,
+} from "../validations";
 
 const router = Router();
 
@@ -55,6 +61,11 @@ router.get("/", async (req: Request, res: Response) => {
 // Get Restaurant Details => All
 router.get("/:id", async (req: Request, res: Response) => {
   const restaurantId = req.params.id;
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return sendError(res, 400, formatErrorMessages(errors.mapped()));
+  }
 
   try {
     const restaurant = await Restaurant.findById(restaurantId).populate([
@@ -93,6 +104,7 @@ router.post(
   "/",
   verifyTokenOwnerOrAdmin,
   checkFileType("images"),
+  addRestaurantValidation,
   uploadMiddleware("images"),
   async (req: Request, res: Response) => {
     const {
@@ -108,6 +120,12 @@ router.post(
     } = req.body;
     if (req.user) {
       const owner = req.user.id;
+
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return sendError(res, 400, formatErrorMessages(errors.mapped()));
+      }
 
       const location = new Location({
         address,
@@ -156,30 +174,42 @@ router.put(
   "/:id",
   verifyTokenOwnerOrAdmin,
   checkFileType("images"),
+  updatedRestaurantValidation,
   uploadMiddleware("images"),
   async (req: Request, res: Response) => {
     const restaurantId = req.params.id;
 
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return sendError(res, 400, formatErrorMessages(errors.mapped()));
+    }
+
+    const { address, longitude, latitude, ...others } = req.body;
+
     try {
+      let restaurant = await Restaurant.findById(restaurantId);
+
+      if (latitude || longitude || address) {
+        const location = await Location.findById(restaurant?.location);
+
+        if (location) {
+          if (latitude) location.latitude = latitude;
+          if (longitude) location.longitude = longitude;
+          if (address) location.address = address;
+
+          await location.save();
+        }
+      }
+
       const updatedRestaurant = await Restaurant.findByIdAndUpdate(
         restaurantId,
         {
-          $set: req.body,
+          $set: others,
         },
         {
           new: true,
         }
-      ).populate([
-        {
-          path: "owner",
-          select: "username profilePicture",
-        },
-        {
-          path: "location",
-          select: "address",
-        },
-      ]);
-
+      );
       sendResponse(
         res,
         200,
@@ -212,36 +242,46 @@ router.get("/:id/review", async (req: Request, res: Response) => {
 });
 
 // Add Review for Restaurant => Logged In User
-router.post("/:id/review", verifyToken, async (req: Request, res: Response) => {
-  const restaurantId = req.params.id;
-  const { rating, comment } = req.body;
+router.post(
+  "/:id/review",
+  verifyToken,
+  addReviewValidation,
+  async (req: Request, res: Response) => {
+    const restaurantId = req.params.id;
+    const { rating, comment } = req.body;
+    const errors = validationResult(req);
 
-  if (req.user) {
-    const review = new Review({
-      user: req.user.id,
-      restaurant: restaurantId,
-      rating,
-      comment,
-    });
+    if (!errors.isEmpty()) {
+      return sendError(res, 400, formatErrorMessages(errors.mapped()));
+    }
 
-    try {
-      const savedReview = await review.save();
-
-      const updatedRestaurant = await Restaurant.findByIdAndUpdate(
-        restaurantId,
-        { $push: { reviews: savedReview._id } },
-        { new: true }
-      ).populate({
-        path: "reviews",
+    if (req.user) {
+      const review = new Review({
+        user: req.user.id,
+        restaurant: restaurantId,
+        rating,
+        comment,
       });
 
-      sendResponse(res, 200, updatedRestaurant, "Restaurant Updated");
-    } catch (err: any) {
-      sendError(res, 500, err.message);
+      try {
+        const savedReview = await review.save();
+
+        const updatedRestaurant = await Restaurant.findByIdAndUpdate(
+          restaurantId,
+          { $push: { reviews: savedReview._id } },
+          { new: true }
+        ).populate({
+          path: "reviews",
+        });
+
+        sendResponse(res, 200, updatedRestaurant, "Restaurant Updated");
+      } catch (err: any) {
+        sendError(res, 500, err.message);
+      }
+    } else {
+      sendError(res, 404, "User Not Found");
     }
-  } else {
-    sendError(res, 404, "User Not Found");
   }
-});
+);
 
 export { router as RestaurantRouter };

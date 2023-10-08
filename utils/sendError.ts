@@ -8,5 +8,5 @@ export function sendError(res: Response, status: number, message: string) {
     timestamp: new Date().toISOString(),
   };
 
-  res.json(error);
+  res.status(status).json(error);
 }

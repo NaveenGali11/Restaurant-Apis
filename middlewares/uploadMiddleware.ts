@@ -8,8 +8,7 @@ export const uploadMiddleware = (
   return async (req: Request, res: Response, next: NextFunction) => {
     let images: UploadedFile | UploadedFile[];
     if (!req.files || Object.keys(req.files).length === 0) {
-      req.body[fileType] = [];
-      next();
+      return next();
     } else {
       let imagesPaths: string[] = [];
       images = req.files[fileType];
