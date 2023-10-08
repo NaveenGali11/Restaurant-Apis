@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-interface ILocation extends Document {
+export interface ILocation extends Document {
   address: string;
   latitude: number;
   longitude: number;

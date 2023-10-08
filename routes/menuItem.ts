@@ -6,7 +6,12 @@ import {
   verifyTokenOwnerOrAdmin,
 } from "../middlewares";
 import { MenuItem, Restaurant } from "../models";
-import { sendError, sendResponse } from "../utils";
+import { formatErrorMessages, sendError, sendResponse } from "../utils";
+import {
+  addMenuItemValidation,
+  updateMenuItemValidation,
+} from "../validations";
+import { validationResult } from "express-validator";
 
 const router = Router();
 
@@ -32,6 +37,7 @@ router.post(
   "/:id/add",
   verifyTokenOwnerOrAdmin,
   checkFileType("images"),
+  addMenuItemValidation,
   uploadMiddleware("images", "uploads/menu/"),
   async (req: Request, res: Response) => {
     const restaurantId = req.params.id;
@@ -44,6 +50,12 @@ router.post(
       restaurant: restaurantId,
       images: req.body.images,
     });
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return sendError(res, 400, formatErrorMessages(errors.mapped()));
+    }
 
     try {
       const newMenuItem = await menuItem.save();
@@ -67,9 +79,15 @@ router.put(
   "/:menuId",
   verifyTokenOwnerOrAdmin,
   checkFileType("images"),
+  updateMenuItemValidation,
   uploadMiddleware("images", "uploads/menu/"),
   async (req: Request, res: Response) => {
     const menuId = req.params.menuId;
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return sendError(res, 400, formatErrorMessages(errors.mapped()));
+    }
 
     try {
       const updatedMenuItem = await MenuItem.findByIdAndUpdate(

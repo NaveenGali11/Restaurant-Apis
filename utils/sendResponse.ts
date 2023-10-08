@@ -16,5 +16,5 @@ export function sendResponse(
     timestamp: new Date().toISOString(),
   };
 
-  res.json(response);
+  res.status(status).json(response);
 }
