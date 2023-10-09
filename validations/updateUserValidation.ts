@@ -12,6 +12,7 @@ export const updateUserValidation: ValidationChain[] = [
     .withMessage("User name should be min of 8 characters"),
 
   check("email")
+    .optional()
     .notEmpty()
     .withMessage("Email is Required")
     .bail()
@@ -19,6 +20,7 @@ export const updateUserValidation: ValidationChain[] = [
     .withMessage("Please Enter a Valid Email Address"),
 
   check("password")
+    .optional()
     .notEmpty()
     .withMessage("Password is Required")
     .bail()
