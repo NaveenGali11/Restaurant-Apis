@@ -6,3 +6,5 @@ export * from "./addReviewValidation";
 export * from "./updateUserValidation";
 export * from "./addMenuItemValidation";
 export * from "./updateMenuItemValidation";
+export * from "./addAddressValidation";
+export * from "./updateAddressValidation";

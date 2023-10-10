@@ -6,6 +6,7 @@ import cors from "cors";
 import fileUpload from "express-fileupload";
 
 import {
+  AddressRouter,
   AuthRouter,
   MenuItemRouter,
   RestaurantRouter,
@@ -29,6 +30,7 @@ app.use("/api/auth", AuthRouter);
 app.use("/api/users", UserRouter);
 app.use("/api/menu", MenuItemRouter);
 app.use("/api/restaurants", RestaurantRouter);
+app.use("/api/address", AddressRouter);
 
 mongoose.connect(process.env.MONGO_URL as string).then(
   () => {

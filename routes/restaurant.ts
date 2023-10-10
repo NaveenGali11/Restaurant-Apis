@@ -9,11 +9,10 @@
  * ✅ 8. GET -/api/restaurants/:restaurantId/reviews: Retrieve reviews for a specific restaurant.
  */
 
-import { Request as ExpressRequest, Router } from "express";
+import { Router } from "express";
 import { RestaurantController } from "../controllers";
 import {
   checkFileType,
-  jwtUser,
   uploadMiddleware,
   verifyToken,
   verifyTokenOwnerOrAdmin,
@@ -25,10 +24,6 @@ import {
 } from "../validations";
 
 const router = Router();
-
-interface Request extends ExpressRequest {
-  user?: jwtUser;
-}
 
 // Get All Restaurants => All
 router.get("/", RestaurantController.getAllRestaurant);
