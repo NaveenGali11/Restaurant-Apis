@@ -56,6 +56,20 @@ export const verifyTokenAndAuthorization = (
   });
 };
 
+export const verifyTokenAndUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  verifyToken(req, res, () => {
+    if (req.user) {
+      next();
+    } else {
+      return sendError(res, 401, "Un Authorized");
+    }
+  });
+};
+
 export const verifyTokenOwnerOrAdmin = (
   req: Request,
   res: Response,
